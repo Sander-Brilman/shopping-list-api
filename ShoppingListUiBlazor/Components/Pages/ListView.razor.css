@@ -1,0 +1,24 @@
+﻿
+
+
+.active-items {
+    transition-property: display, transform;
+    transition-duration: .5s;
+    transition-behavior: allow-discrete;
+    display: block;
+    transform: scale(1);
+
+    @starting-style {
+        transform: scale(0);
+    }
+}
+
+    .active-items.hidden 
+    {
+        transform: scale(0);
+        display: none;
+    }
+
+
+
+

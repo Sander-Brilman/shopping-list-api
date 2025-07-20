@@ -1,0 +1,27 @@
+﻿@page "/lijst/nieuw"
+
+@using System.Net.Http.Json;
+
+@inject HttpClient _http;
+@inject NavigationManager _nav;
+
+<h1>Lijst toevoegen</h1>
+<h3 class="text-secondary mb-5">NOG EEN? Moet ik mij zorgen maken?</h3>
+
+<label class="mb-3 d-block">
+    Lijst naam
+    <input @bind="listName" class="form-control">
+</label>
+
+<button class="btn btn-primary" @onclick="Add">Toevoegen</button>
+
+@code {
+    string listName = "";
+
+    private async Task Add()
+    {
+        await _http.PostAsJsonAsync("/api/list", new CreateShoppingListRequest(listName));
+
+        _nav.NavigateTo("/", true);
+    }
+}

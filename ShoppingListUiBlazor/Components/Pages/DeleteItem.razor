@@ -1,0 +1,105 @@
+﻿@page "/lijst/item-verwijderen/{name}/{ListId:guid}";
+
+@using ShoppingListUIBlazor.Components.Shared
+@using ShoppingListUIBlazor.Components.Shared.AlertBox
+
+@inject HttpClient _http;
+@inject ItemRepository _itemRepository;
+@inject AlertBoxService _alertBoxService;
+
+<h1 class="mb-2">Items verwijderen voor @Name</h1>
+<h3 class="text-secondary">Tik op een item om het te verwijderen</h3>
+<h6 class="text-danger mb-5">En Ja, er is nu een undo. <small class="text-secondary">(graag gedaan hé)</small></h6>
+
+
+<SearchBox 
+    @bind-SearchValue:set="StartSearch"
+    @bind-SearchValue:get="searchQuery"
+></SearchBox>
+
+<hr class="my-4" />
+
+@if (allItems is not null)
+{
+    @foreach (ShoppingItemResponse item in displayedItems.OrderBy(i => i.TimesUsed))
+    {
+        <button class="mb-3 p-2 px-4 d-block w-100 text-start border-0" @onclick="async () => { await Delete(item); }">
+            <span class="oi oi-trash me-2"></span>@item.Name
+        </button>
+    }
+}
+
+<hr class="mb-3" />
+
+<a href="/lijst/bekijken/@Name/@ListId">Terug naar de lijst</a>
+
+@code {
+    [Parameter]
+    public required string Name { get; set; }
+
+    [Parameter]
+    public required Guid ListId { get; set; }
+
+    List<ShoppingItemResponse>? allItems;
+
+    List<ShoppingItemResponse> displayedItems = new();
+
+    string searchQuery = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        allItems = await _itemRepository.GetAllInList(ListId);
+
+        ClearSearch();
+    }
+
+    void ClearSearch()
+    {
+        searchQuery = "";
+        displayedItems = allItems ?? new();
+    }
+
+    void StartSearch(string searchValue)
+    {
+        searchQuery = searchValue;
+
+        if (searchQuery == "")
+        {
+            ClearSearch();
+            return;
+        }
+
+        displayedItems = allItems!
+            .Search(searchQuery)
+            .ToList();
+    }
+
+    private async Task Delete(ShoppingItemResponse shoppingItem)
+    {
+        allItems?.Remove(shoppingItem);
+
+        await _itemRepository.DeleteItemFromList(shoppingItem);
+
+        await _alertBoxService.SetContentAsync(new AlertBoxContent
+            {
+                AlertText = $"'{shoppingItem.Name}' verwijdert",
+                BootstrapTheme = "danger",
+                ButtonText = "Undo",
+                OnButtonClick = async () => await OnUndo(shoppingItem)
+            });
+
+        ClearSearch();
+    }
+
+    private async Task OnUndo(ShoppingItemResponse shoppingItem)
+    {
+        await _itemRepository.Create(new NewShoppingItemRequest
+            {
+                ListId = ListId,
+                Name = shoppingItem.Name,
+            });
+
+        allItems?.Add(shoppingItem);
+        await InvokeAsync(StateHasChanged);
+    }
+}

@@ -1,0 +1,39 @@
+﻿@page "/lijst/verwijderen"
+
+@using System.Net.Http.Json;
+
+@inject HttpClient _http;
+@inject NavigationManager _nav;
+
+
+<h1>Lijst verwijderen</h1>
+<h3 class="text-secondary mb-5">Hiervoor is dan weer geen undo, wees voorzichtig ¯\_(ツ)_/¯</h3>
+
+@if (_list is not null)
+{
+    @foreach (ShoppingListResponse currentList in _list)
+    {
+        <button class="btn btn-danger w-100 mb-2 p-2 px-4" @onclick="async () => { await Delete(currentList); }">
+            <span class="oi oi-trash me-3"></span>
+            @currentList.Name
+        </button>
+    }
+}
+
+<button class="btn btn-info" @onclick='() => _nav.NavigateTo("/lijst/verwijderen", true)'>Menu herladen</button>
+
+@code {
+    List<ShoppingListResponse>? _list = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _list = await _http.GetFromJsonAsync<List<ShoppingListResponse>>("/api/list/");
+    }
+
+    private async Task Delete(ShoppingListResponse list)
+    {
+        await _http.DeleteAsync($"/api/list/{list.Id}");
+
+        _list?.Remove(list);
+    }
+}

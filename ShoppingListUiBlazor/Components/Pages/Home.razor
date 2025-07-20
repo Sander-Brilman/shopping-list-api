@@ -1,0 +1,45 @@
+﻿@page "/";
+
+@using System.Net.Http.Json;
+
+@inject ShoppingListRepository itemListRepo;
+
+<h1>Kies een lijst uit de lijst der lijsten</h1>
+<h2 class="h3 text-secondary mb-2">Om in te lijsten zo mooi!</h2>
+
+<hr class="mb-5" />
+
+
+<ul class="list-unstyled mb-5">
+    @{
+        int num = 0;
+        foreach (var list in lists)
+        {
+            <li>
+                <a href="/lijst/bekijken/@list.Name/@list.Id">
+                    @if (num == 0) {
+                        <i class="bi bi-award"></i>
+                    }
+                    @list.Name
+                </a>
+            </li>
+
+            num++;
+        }
+    }
+</ul>
+
+<footer class="text-secondary pt-4">
+    V8.2 standalone <small class="text-secondary">(.net 8 hell yeah 😎)</small>
+</footer>
+
+
+@code {
+
+    private ShoppingListResponse[] lists = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        lists = await itemListRepo.GetAllLists();
+    }
+}

@@ -1,0 +1,45 @@
+﻿@inject ShoppingListRepository itemListRepo;
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Boodschappen ofzo</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+
+        @foreach (var list in lists)
+        {
+            <div class="nav-item px-3">
+                <a class="nav-link" href="/lijst/bekijken/@list.Name/@list.Id">
+                    @list.Name
+                </a>
+            </div>
+        }
+
+        <hr class="w-100 text-white" />
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/lijst/nieuw">
+                <i class="bi bi-clipboard-plus h5 mt-1 me-3"></i>
+                Toevoegen
+            </NavLink>
+            <NavLink class="nav-link" href="/lijst/verwijderen">
+                <i class="bi bi-clipboard-minus h5 mt-1 me-3"></i>
+                Verwijderen
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private ShoppingListResponse[] lists = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        lists = await itemListRepo.GetAllLists();
+    }
+}

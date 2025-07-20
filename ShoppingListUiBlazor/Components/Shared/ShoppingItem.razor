@@ -1,0 +1,59 @@
+﻿@using ShoppingListUIBlazor.Components.Shared.AlertBox
+@inject HttpClient _http;
+
+@inject ItemRepository _itemRepository;
+@inject AlertBoxService _alertBoxService;
+
+
+<button class='@(Item.IsChecked ? "checked" : "")' @onclick="OnButtonClick">
+    @if (Item.IsChecked)
+    {
+        <i class="bi bi-bag-check-fill me-3 text-danger"></i>
+    }
+    else
+    {
+        <i class="bi bi-bag-plus-fill me-3 text-secondary"></i>
+    }
+    @Item.Name
+</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ShoppingItemResponse Item { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<ShoppingItemResponse> OnToggle { get; set; }
+
+    string iconClasses => Item.IsChecked ? "oi-circle-x" : "oi-pin text-secondary";
+
+    async Task OnButtonClick()
+    {
+        // do not remove this local variable
+        //
+        // i found this wierd bug where if i were to use Item directly it changes the object refference
+        // to the shopping item below the current after the "ToggleItem" call, this results in the "undo" button 
+        // acutally toggeling the shopping item below itself instead of itself.
+        // 
+        // assinging the current shopping item somehow fixes the problem. 
+        // i dont know why it does this or how to "propperly" fix this but this seems to fix it.
+        ShoppingItemResponse item = Item;
+
+        bool newState = !item.IsChecked;
+
+        await _itemRepository.SetItemState(item, newState);
+
+        await _alertBoxService.SetContentAsync(new AlertBoxContent
+            {
+                AlertText = $"{item.Name} op {(item.IsChecked ? "actief" : "inactief")} gezet",
+                BootstrapTheme = "primary",
+                ButtonText = "Undo",
+                OnButtonClick = async () =>
+                {
+                    Console.WriteLine("undoing item" + item.Name);
+                    await _itemRepository.SetItemState(item, !newState);
+                }
+            });
+
+        await OnToggle.InvokeAsync(item);
+    }
+}
