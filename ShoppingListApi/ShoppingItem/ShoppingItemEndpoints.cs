@@ -20,10 +20,16 @@ public static class ShoppingItemEndpoints
 
     public static async Task<IResult> CreateNew(NewShoppingItemRequest newItem, AppDbContext dbContext, IHubContext<ShoppingItemHub> hubContext, IMemoryCache cache, CancellationToken token)
     {
+        string parsedName = newItem.Name.Trim();
+        if (parsedName.Length == 0) {
+            return Results.BadRequest("empty name not allowed");
+        }
+
+
         ShoppingItemEntity shoppingItem = new() 
         {
             ListId = newItem.ListId,
-            Name = newItem.Name,
+            Name = parsedName,
             Id = Guid.NewGuid(),
             IsChecked = true,
             TimesUsed = 0,

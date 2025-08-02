@@ -73,8 +73,13 @@ public static class ShoppingListEndpoints
 
     public static async Task<IResult> CreateNew(CreateShoppingListRequest body, AppDbContext dbContext, IMemoryCache cache, IHubContext<ShoppingListHub> hubContext)
     {
+        string parsedName = body.Name.Trim();
+        if (parsedName.Length == 0) {
+            return Results.BadRequest("empty name not allowed");
+        }
+
         ShoppingListEntity newList = new() {
-            Name = body.Name,
+            Name = parsedName,
         };
 
         dbContext.Lists.Add(newList);
