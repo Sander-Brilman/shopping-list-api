@@ -2,49 +2,48 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ShoppingListApi.Data;
-
 
 #nullable disable
 
 namespace ShoppingListApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230602205107_init")]
-    partial class init
+    [Migration("20250802001432_NewOne")]
+    partial class NewOne
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.5")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("PersonalShoppingListServer.Data.Models.ShoppingItem", b =>
+            modelBuilder.Entity("ShoppingListApi.Data.Models.ShoppingItemEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsChecked")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("ListId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("TimesUsed")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -53,25 +52,25 @@ namespace ShoppingListApi.Migrations
                     b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("PersonalShoppingListServer.Data.Models.ShoppingList", b =>
+            modelBuilder.Entity("ShoppingListApi.Data.Models.ShoppingListEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Lists");
                 });
 
-            modelBuilder.Entity("PersonalShoppingListServer.Data.Models.ShoppingItem", b =>
+            modelBuilder.Entity("ShoppingListApi.Data.Models.ShoppingItemEntity", b =>
                 {
-                    b.HasOne("PersonalShoppingListServer.Data.Models.ShoppingList", "List")
+                    b.HasOne("ShoppingListApi.Data.Models.ShoppingListEntity", "List")
                         .WithMany("Items")
                         .HasForeignKey("ListId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -80,7 +79,7 @@ namespace ShoppingListApi.Migrations
                     b.Navigation("List");
                 });
 
-            modelBuilder.Entity("PersonalShoppingListServer.Data.Models.ShoppingList", b =>
+            modelBuilder.Entity("ShoppingListApi.Data.Models.ShoppingListEntity", b =>
                 {
                     b.Navigation("Items");
                 });
