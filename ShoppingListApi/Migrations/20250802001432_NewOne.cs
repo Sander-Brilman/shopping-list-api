@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ShoppingListApi.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class NewOne : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,8 +15,8 @@ namespace ShoppingListApi.Migrations
                 name: "Lists",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -27,11 +27,11 @@ namespace ShoppingListApi.Migrations
                 name: "Items",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TimesUsed = table.Column<int>(type: "int", nullable: false),
-                    IsChecked = table.Column<bool>(type: "bit", nullable: false),
-                    ListId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    TimesUsed = table.Column<int>(type: "integer", nullable: false),
+                    IsChecked = table.Column<bool>(type: "boolean", nullable: false),
+                    ListId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
