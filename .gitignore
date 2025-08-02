@@ -366,3 +366,4 @@ FodyWeavers.xsd
 *.Production.json
 
 .env
+postgres-data/
