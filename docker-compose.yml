@@ -11,10 +11,10 @@ services:
     volumes:
       - ${PWD}/postgres-data/:/var/lib/postgresql/data/
     networks:
-      - appnetwork
+      - backend
 
   api:
-    build: .
+    build: ./
     image: shopping-list-api:latest
     restart: unless-stopped
     ports:
@@ -24,10 +24,7 @@ services:
     environment:
       - ConnectionStrings__ShoppingListDB=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
     networks:
-      - appnetwork
-
-volumes:
-  db-data:
+      - backend
 
 networks:
-  appnetwork:
+  backend:
