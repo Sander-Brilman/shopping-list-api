@@ -7,13 +7,13 @@ RUN mkdir ShoppingListApi
 RUN mkdir Shared
 
 # Copy project file and restore as distinct layers
-COPY --link ShoppingListApi/*.csproj ./ShoppingListApi
-COPY --link ShoppingListApi/. ./ShoppingListApi
+COPY --link ./src/ShoppingListApi/*.csproj ./ShoppingListApi
+COPY --link ./src/ShoppingListApi/. ./ShoppingListApi
 
 
 # Copy project file and restore as distinct layers
-COPY --link Shared/*.csproj ./Shared
-COPY --link Shared/. ./Shared
+COPY --link ./src/Shared/*.csproj ./Shared
+COPY --link ./src/Shared/. ./Shared
 
 WORKDIR /source/ShoppingListApi
 

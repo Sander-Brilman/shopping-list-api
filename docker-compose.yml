@@ -15,6 +15,7 @@ services:
 
   api:
     build: .
+    image: shopping-list-api:latest
     restart: unless-stopped
     ports:
       - ${PUBLIC_APP_PORT}:8080

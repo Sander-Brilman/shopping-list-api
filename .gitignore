@@ -365,5 +365,8 @@ FodyWeavers.xsd
 
 *.Production.json
 
+shopping-list-api-container.tar
 .env
+.env.production
 postgres-data/
+inventory.ini
