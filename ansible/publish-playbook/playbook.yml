@@ -27,7 +27,7 @@
         state: directory
         owner: "{{ APP_USER }}"
         group: restic
-        mode: 0650 
+        mode: u=rx,g=rx,o=
 
 
 - name: build the docker container
@@ -63,7 +63,7 @@
         dest: "/home/{{ APP_USER }}/{{ item.dest }}"
         owner: "{{ APP_USER }}"
         group: restic
-        mode: 0640
+        mode: u=r,g=r,o=
         force: true
       loop:
         - { src: "../../shopping-list-api-container.tar", dest: shopping-list-api-container.tar }
@@ -75,7 +75,7 @@
         dest: "/home/{{ APP_USER }}/.env"
         owner: "{{ APP_USER }}"
         group: restic
-        mode: 0640
+        mode: u=r,g=r,o=
         force: true
 
     - name: setting permissions of backup directory
@@ -84,7 +84,7 @@
         state: directory
         owner: 70 # postgres user from the postgres backup image
         group: restic
-        mode: 0750
+        mode: u=rwx,g=rx,o=
 
     - name: Stop running containers
       command: sudo docker compose down 
@@ -115,7 +115,7 @@
         dest: "/etc/caddy/sites/{{ APP_USER }}.caddyfile"
         owner: caddy
         group: restic
-        mode: 0640
+        mode: u=r,g=r,o=
 
     - name: restart Caddy service
       command: sudo caddy reload --config /etc/caddy/Caddyfile
