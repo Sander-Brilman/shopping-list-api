@@ -15,7 +15,7 @@
       user:
         name: "{{ APP_USER }}"
         comment: user for running the shoppinglist api docker compose
-        create_home: yes # we will place the app here!
+        create_home: true # we will place the app here!
         groups: "{{ APP_USER }},docker"
         state: present
         shell: /usr/sbin/nologin
@@ -27,7 +27,7 @@
         state: directory
         owner: "{{ APP_USER }}"
         group: restic
-        mode: '0650'      
+        mode: 0650 
 
 
 - name: build the docker container
@@ -63,7 +63,7 @@
         dest: "/home/{{ APP_USER }}/{{ item.dest }}"
         owner: "{{ APP_USER }}"
         group: restic
-        mode: '0644'
+        mode: 0640
         force: true
       loop:
         - { src: "../../shopping-list-api-container.tar", dest: shopping-list-api-container.tar }
@@ -75,7 +75,7 @@
         dest: "/home/{{ APP_USER }}/.env"
         owner: "{{ APP_USER }}"
         group: restic
-        mode: '0644'
+        mode: 0640
         force: true
 
     - name: Stop running containers
@@ -107,7 +107,7 @@
         dest: "/etc/caddy/sites/{{ APP_USER }}.caddyfile"
         owner: caddy
         group: restic
-        mode: 0644
+        mode: 0640
 
     - name: restart Caddy service
       command: sudo caddy reload --config /etc/caddy/Caddyfile
