@@ -14,6 +14,7 @@ public static class ShoppingListEndpoints
     {
         app.MapGet("/", GetAll).WithOpenApi();
         app.MapGet("/{listId:guid}/items", GetAllItems).WithOpenApi();
+        app.MapGet("/clear-cache", ClearCache).WithOpenApi();
         app.MapPost("/", CreateNew).WithOpenApi();
         app.MapDelete("/{id:guid}", Delete).WithOpenApi();
     }
@@ -74,11 +75,13 @@ public static class ShoppingListEndpoints
     public static async Task<IResult> CreateNew(CreateShoppingListRequest body, AppDbContext dbContext, IMemoryCache cache, IHubContext<ShoppingListHub> hubContext)
     {
         string parsedName = body.Name.Trim();
-        if (parsedName.Length == 0) {
+        if (parsedName.Length == 0)
+        {
             return Results.BadRequest("empty name not allowed");
         }
 
-        ShoppingListEntity newList = new() {
+        ShoppingListEntity newList = new()
+        {
             Name = parsedName,
         };
 
@@ -100,6 +103,12 @@ public static class ShoppingListEndpoints
             .ExecuteDeleteAsync();
         await hubContext.Clients.All.SendAsync(ListHubMethods.OnListDeleted, id);
 
+        return Results.NoContent();
+    }
+
+    public static IResult ClearCache(IMemoryCache cache)
+    {
+        cache.Remove(CacheConfig.Keys.AllShoppingLists);
         return Results.NoContent();
     }
 }

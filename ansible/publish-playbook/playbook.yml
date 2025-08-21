@@ -86,13 +86,13 @@
         group: restic
         mode: u=rwx,g=rx,o=
 
-    - name: Stop running containers
-      command: sudo docker compose down 
+    - name: Load image into Docker
+      command: docker load -i ./shopping-list-api-container.tar
       args:
         chdir: "/home/{{ APP_USER }}/"
 
-    - name: Load image into Docker
-      command: docker load -i ./shopping-list-api-container.tar
+    - name: Stop running containers
+      command: sudo docker compose down 
       args:
         chdir: "/home/{{ APP_USER }}/"
 
