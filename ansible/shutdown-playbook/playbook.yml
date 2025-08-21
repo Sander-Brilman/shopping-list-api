@@ -1,0 +1,11 @@
+- name: shutdown app 
+  tags: shutdown
+  hosts: all
+  become: true
+  vars_files:
+  - ./variables.yml
+  tasks:
+    - name: running docker compose down
+      command: sudo docker compose down
+      args:
+        chdir: "/home/{{ APP_USER }}/"

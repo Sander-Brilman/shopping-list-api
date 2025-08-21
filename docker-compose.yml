@@ -18,6 +18,7 @@ services:
 
   pg-backup:
     image: prodrigestivill/postgres-backup-local:17-alpine
+    user: postgres:postgres # user id = 70
     restart: unless-stopped
     depends_on:
       - postgres

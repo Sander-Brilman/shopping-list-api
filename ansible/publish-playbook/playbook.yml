@@ -1,5 +1,5 @@
 
-- name: create {{ APP_USER }} user
+- name: "create {{ APP_USER }} user"
   tags: create_user
   hosts: all
   become: true
@@ -77,6 +77,14 @@
         group: restic
         mode: 0640
         force: true
+
+    - name: setting permissions of backup directory
+      file:
+        path: "{{ POSTGRES_BACKUP_LOCATION }}"
+        state: directory
+        owner: 70 # postgres user from the postgres backup image
+        group: restic
+        mode: 0750
 
     - name: Stop running containers
       command: sudo docker compose down 
