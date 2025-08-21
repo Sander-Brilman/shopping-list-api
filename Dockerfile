@@ -27,5 +27,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS shopping-list-api
 EXPOSE 8080
 WORKDIR /app
 COPY --link --from=build /app .
-USER $APP_UID
+USER 1001:1001
 ENTRYPOINT ["./ShoppingListApi"]

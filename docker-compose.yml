@@ -1,26 +1,30 @@
 services:
   postgres:
-    image: postgres:latest        
-    # user: postgres:postgres  todo
+    image: postgres:17-alpine        
     restart: unless-stopped
     ports:
       - "${PUBLIC_DB_PORT}:5432"
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - ${PWD}/postgres-data:/var/lib/postgresql/data
+      - ${POSTGRES_DATA_LOCATION}:/var/lib/postgresql/data
     networks:
       - internal-only
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U postgres"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
 
   pg-backup:
-    image: prodrigestivill/postgres-backup-local:latest
-    container_name: pg-backup
+    image: prodrigestivill/postgres-backup-local:17-alpine
     restart: unless-stopped
-    # user: postgres:postgres    todo
     depends_on:
       - postgres
     environment:
+      - POSTGRES_USER=postgres
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
       - SCHEDULE=@daily
@@ -29,7 +33,7 @@ services:
       - BACKUP_KEEP_WEEKS=0
       - BACKUP_KEEP_MONTHS=0
     volumes:
-      - ./postgres-backups:/backups
+      - ${POSTGRES_BACKUP_LOCATION}:/backups
     networks:
       - internal-only
     links:
@@ -38,20 +42,21 @@ services:
   api:
     build: ./
     image: shopping-list-api:latest
+    user: 1001:1001
     restart: unless-stopped
     ports:
       - ${PUBLIC_APP_PORT}:8080
     depends_on:
       - postgres
     environment:
-      - ConnectionStrings__ShoppingListDB=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__ShoppingListDB=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=postgres;Password=${POSTGRES_PASSWORD}
     networks:
       - internal-only
-      # - backend
+      - backend
 
 networks:
   internal-only:
     driver: bridge
     # internal: true
-  # backend:
-  #   driver: bridge
+  backend:
+    driver: bridge

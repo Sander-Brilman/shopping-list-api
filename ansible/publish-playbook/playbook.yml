@@ -50,62 +50,33 @@
         chdir: ../../
 
 
-- name: Install and run app on remote server
+- name: Install and run app 
   tags: run_container
   hosts: all
   become: true
   vars_files:
   - ./variables.yml
   tasks:
-    - name: Create postgres-data directory
-      file: 
-        path: "/home/{{ APP_USER }}/postgres-data"
-        state: directory
-        owner: "{{ APP_USER }}"
-        group: "{{ APP_USER }}"
-        mode: '0644'
-
-    - name: Create postgres-backups directory
-      file: 
-        path: "/home/{{ APP_USER }}/postgres-backups"
-        state: directory
-        owner: "{{ APP_USER }}"
-        group: restic
-        mode: '0654'
-
     - name: Copy Docker files
       copy:
-        src: "../../{{ item.src }}"
+        src: "{{ item.src }}"
         dest: "/home/{{ APP_USER }}/{{ item.dest }}"
         owner: "{{ APP_USER }}"
         group: restic
         mode: '0644'
         force: true
       loop:
-        - { src: shopping-list-api-container.tar, dest: shopping-list-api-container.tar }
-        - { src: docker-compose.yml, dest: docker-compose.yml }
-        - { src: .env.production, dest: .env }
+        - { src: "../../shopping-list-api-container.tar", dest: shopping-list-api-container.tar }
+        - { src: "../../docker-compose.yml", dest: docker-compose.yml }
 
-
-    # 
-    # This is a hack that # dynamically adds the "user: XXX:XXX" statement to the compose to run the project as the dedicated {{ APP_USER }} user
-    # this is done to improve isolation between running apps 
-    #
-    - name: Get UID of "{{ APP_USER }}"
-      command: id -u "{{ APP_USER }}"
-      register: user_id_result
-
-    - name: Get GID of "{{ APP_USER }}"
-      command: id -g "{{ APP_USER }}"
-      register: group_id_result
-
-    - name: Inject user directive into docker-compose.yml
-      replace:
-        path: "/home/{{ APP_USER }}/docker-compose.yml"
-        regexp: "image: shopping-list-api:latest"
-        replace: 'user: "{{ user_id_result.stdout }}:{{ group_id_result.stdout }}"\n    image: shopping-list-api:latest'
-
-
+    - name: templating .env file
+      template:
+        src: .env.j2
+        dest: "/home/{{ APP_USER }}/.env"
+        owner: "{{ APP_USER }}"
+        group: restic
+        mode: '0644'
+        force: true
 
     - name: Stop running containers
       command: sudo docker compose down 
@@ -118,7 +89,7 @@
         chdir: "/home/{{ APP_USER }}/"
 
     - name: Start container
-      command: sudo docker-compose up -d 
+      command: sudo docker-compose up -d --force-recreate
       args:
         chdir: "/home/{{ APP_USER }}/"
 
@@ -130,10 +101,10 @@
   vars_files:
     - ./variables.yml
   tasks:
-    - name: setup reverse proxy config file
+    - name: template reverse proxy caddy file
       template:
-        src: ./shopping-list-api.caddyfile.j2
-        dest: /etc/caddy/sites/shopping-list-api
+        src: caddyfile.j2
+        dest: "/etc/caddy/sites/{{ APP_USER }}.caddyfile"
         owner: caddy
         group: restic
         mode: 0644
@@ -150,9 +121,9 @@
   vars_files:
     - ./variables.yml
   tasks:
-    - name: copy backup locations file
+    - name: template backup locations file
       template:
-        src: ./shopping-list-api-backup-locations.txt.j2
-        dest: /home/restic/backup-locations/shopping-list-api.txt
+        src: backup-locations.txt.j2
+        dest: "/home/restic/backup-locations/{{ APP_USER }}.txt"
         owner: restic
         group: restic
