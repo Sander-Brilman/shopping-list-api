@@ -1,17 +1,39 @@
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:latest        
+    # user: postgres:postgres  todo
     restart: unless-stopped
     ports:
-      - ${PUBLIC_DB_PORT}:5432
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      - "${PUBLIC_DB_PORT}:5432"
     volumes:
-      - ${PWD}/postgres-data/:/var/lib/postgresql/data/
+      - ${PWD}/postgres-data:/var/lib/postgresql/data
     networks:
-      - backend
+      - internal-only
+
+  pg-backup:
+    image: prodrigestivill/postgres-backup-local:latest
+    container_name: pg-backup
+    restart: unless-stopped
+    # user: postgres:postgres    todo
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+      - SCHEDULE=@daily
+
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=0
+      - BACKUP_KEEP_MONTHS=0
+    volumes:
+      - ./postgres-backups:/backups
+    networks:
+      - internal-only
+    links:
+      - postgres
 
   api:
     build: ./
@@ -24,7 +46,12 @@ services:
     environment:
       - ConnectionStrings__ShoppingListDB=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
     networks:
-      - backend
+      - internal-only
+      # - backend
 
 networks:
-  backend:
+  internal-only:
+    driver: bridge
+    # internal: true
+  # backend:
+  #   driver: bridge

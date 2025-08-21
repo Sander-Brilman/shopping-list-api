@@ -1,0 +1,3 @@
+PUBLIC_APP_PORT: 8111 # must match the docker compose
+APP_USER: shopping_list_api # the user that will own the app directory and be running the container, use lowercase as seperator
+PUBLIC_DOMAIN_NAME: shopping-list-api.example.com  # this will be used to setup the caddy reverse proxy

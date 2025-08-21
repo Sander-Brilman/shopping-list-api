@@ -369,4 +369,6 @@ shopping-list-api-container.tar
 .env
 .env.production
 postgres-data/
+postgres-backups/
 inventory.ini
+variables.yml
