@@ -132,6 +132,8 @@
     - name: template backup locations file
       template:
         src: backup-locations.txt.j2
-        dest: "/home/restic/backup-locations/{{ APP_USER }}.txt"
+        dest: "/etc/restic/{{ APP_USER }}.txt"
         owner: restic
         group: restic
+        mode: u=r,g=,o=
+
