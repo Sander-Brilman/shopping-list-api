@@ -57,7 +57,5 @@ services:
 
 networks:
   internal-only:
-    driver: bridge
-    # internal: true
+    internal: true
   backend:
-    driver: bridge
