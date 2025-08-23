@@ -84,7 +84,11 @@
         state: directory
         owner: 70 # postgres user from the postgres backup image
         group: restic
-        mode: u=rwx,g=rx,o=
+        mode: u=rwx,g=rx,o=,g+s # g+s enforces that all files in the directory belong to this group
+
+    - name: Recursively set g+s on all backup directory sub-directories
+      command: "find {{ POSTGRES_BACKUP_LOCATION }} -type d -exec chmod g+s {} +"
+
 
     - name: Load image into Docker
       command: docker load -i ./shopping-list-api-container.tar
