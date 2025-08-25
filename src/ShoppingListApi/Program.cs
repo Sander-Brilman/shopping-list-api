@@ -6,31 +6,31 @@ using ShoppingListApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-string connectionString = builder.Configuration.GetConnectionString("ShoppingListDB") ?? "";
+string host = builder.Configuration.GetValue<string>("POSTGRES_HOST") ?? throw new Exception("enviorment variable POSTGRES_HOST not found");
+string port = builder.Configuration.GetValue<string>("POSTGRES_PORT") ?? throw new Exception("enviorment variable POSTGRES_PORT not found");
+string db = builder.Configuration.GetValue<string>("POSTGRES_DB") ?? throw new Exception("enviorment variable POSTGRES_DB not found");
+string user = builder.Configuration.GetValue<string>("POSTGRES_USER") ?? throw new Exception("enviorment variable POSTGRES_USER not found");
+string password = File.ReadAllText(builder.Configuration.GetValue<string>("POSTGRES_PASSWORD_FILE") ?? throw new Exception("enviorment variable POSTGRES_PASSWORD_FILE not found"));
+
+
+
+string connectionString = $"Host={host};Port={port};Database={db};Username={user};Password={password}";
 builder.Services.AddDbContextPool<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
-    // options.UseNpgsql("Host=localhost;Port=5432;Database=mydatabase;Username=user;Password=password;");
-    
     options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
-System.Console.WriteLine($"CONNECTION STRING {connectionString}");
 
 builder.Services.AddResponseCompression();
 builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
 
-// if (builder.Environment.IsDevelopment())
-// {
-    builder.Services.AddEndpointsApiExplorer(); // Enables discovery of minimal API endpoints
-    builder.Services.AddSwaggerGen();           // Adds Swagger generation
-// }
+builder.Services.AddEndpointsApiExplorer(); // Enables discovery of minimal API endpoints
+builder.Services.AddSwaggerGen();           // Adds Swagger generation
 
 var app = builder.Build();
 
-
-await Task.Delay(TimeSpan.FromSeconds(5));
 
 using (var scope = app.Services.CreateScope())
 {
@@ -40,15 +40,11 @@ using (var scope = app.Services.CreateScope())
 
 app.UseMiddleware<CorsMiddleware>();
 
-// if (app.Environment.IsDevelopment())
-// {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapGet("/", () => Results.Redirect("/swagger/"));
-// }
+app.UseSwagger();
+app.UseSwaggerUI();
+app.MapGet("/", () => Results.Redirect("/swagger/"));
 
 app.UseExceptionHandler("/Error", createScopeForErrors: true);
-app.UseHttpsRedirection();
 
 app.UseResponseCompression();
 
@@ -57,7 +53,5 @@ api.MapGroup("List").MapShoppingListEndpoints();
 api.MapGroup("Item").MapShoppingItemEndpoints();
 
 app.MapHub<ShoppingItemHub>("/ShoppingItemHub", options => { });
-app.MapHub<ShoppingListHub>("/ShoppingListHub", options => { });
-
 
 app.Run();

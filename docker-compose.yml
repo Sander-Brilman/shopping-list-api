@@ -1,61 +1,76 @@
 services:
   postgres:
     image: postgres:17-alpine        
+    user: postgres
     restart: unless-stopped
     ports:
-      - "${PUBLIC_DB_PORT}:5432"
+      - ${POSTGRES_PORT}:5432
+    secrets:
+      - postgres-password
     environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password
     volumes:
       - ${POSTGRES_DATA_LOCATION}:/var/lib/postgresql/data
-    networks:
-      - internal-only
     healthcheck:
         test: ["CMD-SHELL", "pg_isready -U postgres"]
         interval: 30s
         timeout: 10s
         retries: 5
+    networks:
+      - internal-only
+  api:
+    build: ./
+    image: shopping-list-api:latest
+    user: "1001"
+    restart: unless-stopped
+    ports:
+      - ${APP_PORT}:8080
+    depends_on:
+      - postgres
+    secrets:
+      - postgres-password
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password
+    networks:
+      - internal-only
+      - public
 
   pg-backup:
     image: prodrigestivill/postgres-backup-local:17-alpine
-    user: postgres:postgres # user id = 70
+    user: postgres
     restart: unless-stopped
     depends_on:
       - postgres
+    secrets:
+      - postgres-password
     environment:
-      - POSTGRES_USER=postgres
       - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
       - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password
 
       - SCHEDULE=@daily
 
-      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_DAYS=2
       - BACKUP_KEEP_WEEKS=0
       - BACKUP_KEEP_MONTHS=0
     volumes:
       - ${POSTGRES_BACKUP_LOCATION}:/backups
     networks:
       - internal-only
-    links:
-      - postgres
 
-  api:
-    build: ./
-    image: shopping-list-api:latest
-    user: 1001:1001
-    restart: unless-stopped
-    ports:
-      - ${APP_PORT}:8080
-    depends_on:
-      - postgres
-    environment:
-      - ConnectionStrings__ShoppingListDB=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=postgres;Password=${POSTGRES_PASSWORD}
-    networks:
-      - internal-only
-      - backend
 
 networks:
   internal-only:
-    internal: true
-  backend:
+    internal: ${POSTGRES_PREVENT_EXTERNAL_CONNECTIONS}
+  public:
+
+secrets:
+  postgres-password:
+    file: ./postgres-password.txt

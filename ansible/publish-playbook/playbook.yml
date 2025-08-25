@@ -69,10 +69,19 @@
         - { src: "../../shopping-list-api-container.tar", dest: shopping-list-api-container.tar }
         - { src: "../../docker-compose.yml", dest: docker-compose.yml }
 
-    - name: templating .env file
+    - name: template .env file
       template:
         src: .env.j2
         dest: "/home/{{ APP_USER }}/.env"
+        owner: "{{ APP_USER }}"
+        group: restic
+        mode: u=r,g=r,o=
+        force: true
+
+    - name: template postgres-password.txt file
+      template:
+        src: postgres-password.txt.j2
+        dest: "/home/{{ APP_USER }}/postgres-password.txt"
         owner: "{{ APP_USER }}"
         group: restic
         mode: u=r,g=r,o=
