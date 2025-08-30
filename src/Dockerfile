@@ -3,7 +3,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /source
 
-COPY --link ./src/ /source
+COPY --link ./ /source
 
 WORKDIR /source/ShoppingListApi
 

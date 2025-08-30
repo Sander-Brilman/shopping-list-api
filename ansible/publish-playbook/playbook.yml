@@ -14,10 +14,8 @@
     - name: create {{ APP_USER }} user 
       user:
         name: "{{ APP_USER }}"
-        comment: user for running the shoppinglist api docker compose
-        create_home: true # we will place the app here!
-        groups: "{{ APP_USER }},docker"
-        state: present
+        comment: user for running the shoppinglist application inside the container
+        groups: "{{ APP_USER }}"
         shell: /usr/sbin/nologin
         password: '!'
 
@@ -30,15 +28,29 @@
         mode: u=rx,g=rx,o=
 
 
+    - name: "Get user id of {{ APP_USER }}"
+      command: "id -u {{ APP_USER }}"
+      register: USER_ID
+      changed_when: false
+    
+    - set_fact:
+        USER_ID: "{{ USER_ID.stdout }}"
+
+
+    - name: "Get group id of {{ APP_USER }}"
+      command: "id -g {{ APP_USER }}"
+      register: USER_GROUP_ID
+      changed_when: false
+
+    - set_fact:
+       USER_GROUP_ID: "{{ USER_GROUP_ID.stdout }}"
+
+
+
 - name: build the docker container
   tags: build_container
   hosts: localhost
   tasks:
-    - name: remove existing .tar
-      file:
-        path: ../shopping-list-api-container.tar
-        state: absent
-
     - name: build docker image
       command: docker compose build
       args:
@@ -67,40 +79,42 @@
         force: true
       loop:
         - { src: "../../shopping-list-api-container.tar", dest: shopping-list-api-container.tar }
-        - { src: "../../docker-compose.yml", dest: docker-compose.yml }
 
-    - name: template .env file
+    - name: template files
       template:
-        src: .env.j2
-        dest: "/home/{{ APP_USER }}/.env"
+        src: "{{ item.src }}"
+        dest: "/home/{{ APP_USER }}/{{ item.dest }}"
         owner: "{{ APP_USER }}"
         group: restic
         mode: u=r,g=r,o=
         force: true
+      loop:
+          - { src: docker-compose.yml.j2, dest: docker-compose.yml }
+          - { src: postgres-password.txt.j2, dest: postgres-password.txt }
 
-    - name: template postgres-password.txt file
-      template:
-        src: postgres-password.txt.j2
-        dest: "/home/{{ APP_USER }}/postgres-password.txt"
-        owner: "{{ APP_USER }}"
-        group: restic
-        mode: u=r,g=r,o=
-        force: true
+
+    - name: setting permissions of data directory
+      file:
+        path: "{{ POSTGRES_DATA_LOCATION }}"
+        state: directory
+        owner: "{{ APP_USER }}" # postgres user from the postgres backup image
+        group: "{{ APP_USER }}"
+        mode: u=rwx,g=rwx,o=
 
     - name: setting permissions of backup directory
       file:
         path: "{{ POSTGRES_BACKUP_LOCATION }}"
         state: directory
-        owner: 70 # postgres user from the postgres backup image
+        owner: "{{ APP_USER }}" # postgres user from the postgres backup image
         group: restic
-        mode: u=rwx,g=rx,o=,g+s # g+s enforces that all files in the directory belong to this group
+        mode: u=rwx,g=rx,o=
 
     - name: Recursively set g+s on all backup directory sub-directories
       command: "find {{ POSTGRES_BACKUP_LOCATION }} -type d -exec chmod g+s {} +"
 
 
     - name: Load image into Docker
-      command: docker load -i ./shopping-list-api-container.tar
+      command: sudo docker load -i ./shopping-list-api-container.tar
       args:
         chdir: "/home/{{ APP_USER }}/"
 
@@ -110,7 +124,7 @@
         chdir: "/home/{{ APP_USER }}/"
 
     - name: Start container
-      command: sudo docker-compose up -d --force-recreate
+      command: sudo docker-compose up -d 
       args:
         chdir: "/home/{{ APP_USER }}/"
 
@@ -144,8 +158,8 @@
   tasks:
     - name: template backup locations file
       template:
-        src: backup-locations.txt.j2
-        dest: "/etc/restic/{{ APP_USER }}.txt"
+        src: backup-locations.j2
+        dest: "/etc/restic/{{ APP_USER }}"
         owner: restic
         group: restic
         mode: u=r,g=,o=

@@ -1,29 +1,24 @@
 services:
   postgres:
     image: postgres:17-alpine        
-    user: postgres
-    restart: unless-stopped
     ports:
       - ${POSTGRES_PORT}:5432
     secrets:
       - postgres-password
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_DB=ShoppingListDB
       - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password
     volumes:
-      - ${POSTGRES_DATA_LOCATION}:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
     healthcheck:
         test: ["CMD-SHELL", "pg_isready -U postgres"]
         interval: 30s
         timeout: 10s
         retries: 5
-    networks:
-      - internal-only
+
   api:
-    build: ./
+    build: ./src/
     image: shopping-list-api:latest
-    user: "1001"
-    restart: unless-stopped
     ports:
       - ${APP_PORT}:8080
     depends_on:
@@ -34,42 +29,8 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_DB=ShoppingListDB
       - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password
-    networks:
-      - internal-only
-      - public
-
-  pg-backup:
-    image: prodrigestivill/postgres-backup-local:17-alpine
-    user: postgres
-    restart: unless-stopped
-    depends_on:
-      - postgres
-    secrets:
-      - postgres-password
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password
-
-      - SCHEDULE=@daily
-
-      - BACKUP_KEEP_DAYS=2
-      - BACKUP_KEEP_WEEKS=0
-      - BACKUP_KEEP_MONTHS=0
-    volumes:
-      - ${POSTGRES_BACKUP_LOCATION}:/backups
-    networks:
-      - internal-only
-
-
-networks:
-  internal-only:
-    internal: ${POSTGRES_PREVENT_EXTERNAL_CONNECTIONS}
-  public:
 
 secrets:
   postgres-password:

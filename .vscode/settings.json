@@ -1,7 +1,0 @@
-{
-    "inlineChat.lineNaturalLanguageHint": false,
-    "github.copilot.enable": {
-        "*": false
-    }
-
-}

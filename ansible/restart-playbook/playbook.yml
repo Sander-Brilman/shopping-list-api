@@ -1,5 +1,5 @@
-- name: shutdown app 
-  tags: shutdown
+- name: restart app 
+  tags: restart
   hosts: all
   become: true
   vars_files:
@@ -7,5 +7,10 @@
   tasks:
     - name: running docker compose down
       command: sudo docker compose down
+      args:
+        chdir: "/home/{{ APP_USER }}/"
+
+    - name: running docker compose up
+      command: sudo docker compose up -d
       args:
         chdir: "/home/{{ APP_USER }}/"

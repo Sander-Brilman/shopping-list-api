@@ -1,0 +1,26 @@
+- name: Restore PostgreSQL dump into Dockerized database
+  hosts: all
+  become: true
+  vars:
+    dump_file_remote: /tmp/backup.sql
+    postgres_container_name: shopping_list_api-postgres-1
+    db_name: ShoppingListDB
+    db_user: postgres
+  tasks:
+    - name: Copy SQL dump to remote server
+      ansible.builtin.copy:
+        src: ./backup.sql
+        dest: "{{ dump_file_remote }}"
+        mode: '0644'
+
+    - name: Restore dump inside Docker container
+      ansible.builtin.shell: |
+        docker exec -i {{ postgres_container_name }} \
+        psql -U {{ db_user }} -d {{ db_name }} < {{ dump_file_remote }}
+      args:
+        executable: /bin/bash
+      register: restore_output
+
+    - name: Show restore output
+      ansible.builtin.debug:
+        var: restore_output.stdout_lines
