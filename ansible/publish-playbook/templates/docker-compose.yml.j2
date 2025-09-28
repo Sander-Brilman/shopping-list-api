@@ -22,7 +22,7 @@ services:
 
 
   api:
-    image: shopping-list-api:latest
+    image: {{ DOCKER_TAG }}
     user: {{ USER_ID }}:{{ USER_GROUP_ID }}
     restart: unless-stopped
     ports:

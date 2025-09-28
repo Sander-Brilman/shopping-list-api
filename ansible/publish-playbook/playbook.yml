@@ -36,7 +36,6 @@
     - set_fact:
         USER_ID: "{{ USER_ID.stdout }}"
 
-
     - name: "Get group id of {{ APP_USER }}"
       command: "id -g {{ APP_USER }}"
       register: USER_GROUP_ID
@@ -46,40 +45,13 @@
        USER_GROUP_ID: "{{ USER_GROUP_ID.stdout }}"
 
 
-
-- name: build the docker container
-  tags: build_container
-  hosts: localhost
-  tasks:
-    - name: build docker image
-      command: docker compose build
-      args:
-        chdir: ../../
-
-    - name: Save Docker image to tarball
-      command: docker save shopping-list-api:latest -o shopping-list-api-container.tar
-      args:
-        chdir: ../../
-
-
-- name: Install and run app 
+- name: setup docker compose 
   tags: run_container
   hosts: all
   become: true
   vars_files:
   - ./variables.yml
   tasks:
-    - name: Copy Docker files
-      copy:
-        src: "{{ item.src }}"
-        dest: "/home/{{ APP_USER }}/{{ item.dest }}"
-        owner: "{{ APP_USER }}"
-        group: restic
-        mode: u=r,g=r,o=
-        force: true
-      loop:
-        - { src: "../../shopping-list-api-container.tar", dest: shopping-list-api-container.tar }
-
     - name: template files
       template:
         src: "{{ item.src }}"
@@ -91,7 +63,6 @@
       loop:
           - { src: docker-compose.yml.j2, dest: docker-compose.yml }
           - { src: postgres-password.txt.j2, dest: postgres-password.txt }
-
 
     - name: setting permissions of data directory
       file:
@@ -109,22 +80,13 @@
         group: restic
         mode: u=rwx,g=rx,o=
 
-    - name: Recursively set g+s on all backup directory sub-directories
-      command: "find {{ POSTGRES_BACKUP_LOCATION }} -type d -exec chmod g+s {} +"
-
-
-    - name: Load image into Docker
-      command: sudo docker load -i ./shopping-list-api-container.tar
-      args:
-        chdir: "/home/{{ APP_USER }}/"
-
     - name: Stop running containers
-      command: sudo docker compose down 
+      command: docker compose down 
       args:
         chdir: "/home/{{ APP_USER }}/"
 
     - name: Start container
-      command: sudo docker-compose up -d 
+      command: docker-compose up -d 
       args:
         chdir: "/home/{{ APP_USER }}/"
 
