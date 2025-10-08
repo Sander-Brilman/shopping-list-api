@@ -6,7 +6,7 @@ services:
   postgres:
     image: postgres:17-alpine        
     ports:
-      - ${POSTGRES_PORT}:5432
+      - ${POSTGRES_PORT:-5432}:5432
     secrets:
       - postgres-password
     environment:
@@ -24,7 +24,7 @@ services:
     build: ./src/
     image: shopping-list-api:latest
     ports:
-      - ${APP_PORT}:8080
+      - ${APP_PORT:-5011}:8080
     depends_on:
       - postgres
     secrets:
