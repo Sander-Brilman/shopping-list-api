@@ -1,0 +1,23 @@
+
+- name: "create {{ APP_USER }} user"
+  tags: create_user
+  hosts: all
+  become: true
+  vars_files:
+    - ./variables.yml
+  tasks:
+
+    - name: Stop pull new containers
+      command: docker compose pull 
+      args:
+        chdir: "/home/{{ APP_USER }}/"
+
+    - name: stop containers
+      command: docker compose down
+      args:
+        chdir: "/home/{{ APP_USER }}/"
+
+    - name: Start containers
+      command: docker compose up -d 
+      args:
+        chdir: "/home/{{ APP_USER }}/"

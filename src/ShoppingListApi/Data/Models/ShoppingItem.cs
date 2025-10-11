@@ -14,7 +14,7 @@ public sealed class ShoppingItemEntity
     
     public bool IsChecked { get; set; } = false;
 
-    public ShoppingListEntity List { get; set; }
+    public ShoppingListEntity? List { get; set; }
 
     public Guid ListId { get; set; }
 }

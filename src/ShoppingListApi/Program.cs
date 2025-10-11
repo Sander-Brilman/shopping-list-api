@@ -43,6 +43,7 @@ app.UseMiddleware<CorsMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapGet("/", () => Results.Redirect("/swagger/"));
+app.MapGet("/health", () => "Healthy");
 
 app.UseExceptionHandler("/Error", createScopeForErrors: true);
 
@@ -53,5 +54,6 @@ api.MapGroup("List").MapShoppingListEndpoints();
 api.MapGroup("Item").MapShoppingItemEndpoints();
 
 app.MapHub<ShoppingItemHub>("/ShoppingItemHub", options => { });
+app.MapHub<ShoppingListHub>("/ShoppingListHub", options => { });
 
 app.Run();
