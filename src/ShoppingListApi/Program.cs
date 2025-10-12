@@ -3,6 +3,7 @@ using ShoppingListApi.ShoppingItem;
 using ShoppingListApi.ShoppingList;
 using ShoppingListApi;
 using ShoppingListApi.Data;
+using ShoppingListApi.Health;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,6 @@ builder.Services.AddDbContextPool<AppDbContext>(options =>
 });
 
 
-builder.Services.AddResponseCompression();
 builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
 
@@ -30,7 +30,6 @@ builder.Services.AddEndpointsApiExplorer(); // Enables discovery of minimal API 
 builder.Services.AddSwaggerGen();           // Adds Swagger generation
 
 var app = builder.Build();
-
 
 using (var scope = app.Services.CreateScope())
 {
@@ -43,15 +42,14 @@ app.UseMiddleware<CorsMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapGet("/", () => Results.Redirect("/swagger/"));
-app.MapGet("/health", () => "Healthy");
 
 app.UseExceptionHandler("/Error", createScopeForErrors: true);
-
-app.UseResponseCompression();
 
 var api = app.MapGroup("/api");
 api.MapGroup("List").MapShoppingListEndpoints();
 api.MapGroup("Item").MapShoppingItemEndpoints();
+app.MapHealthEndpoint();
+
 
 app.MapHub<ShoppingItemHub>("/ShoppingItemHub", options => { });
 app.MapHub<ShoppingListHub>("/ShoppingListHub", options => { });

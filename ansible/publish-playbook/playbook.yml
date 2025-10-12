@@ -80,13 +80,8 @@
         group: restic
         mode: u=rwx,g=rx,o=
 
-    - name: Stop running containers
-      command: docker compose down 
-      args:
-        chdir: "/home/{{ APP_USER }}/"
-
     - name: Start container
-      command: docker-compose up -d 
+      command: docker compose up -d --pull always
       args:
         chdir: "/home/{{ APP_USER }}/"
 
@@ -121,8 +116,8 @@
     - name: template backup locations file
       template:
         src: backup-locations.j2
-        dest: "/etc/restic/{{ APP_USER }}"
+        dest: "/etc/restic/backup-locations/{{ APP_USER }}"
         owner: restic
         group: restic
-        mode: u=r,g=,o=
+        mode: u=r,g=r,o=
 

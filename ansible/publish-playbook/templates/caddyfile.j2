@@ -1,4 +1,5 @@
 https://www.{{ APP_DOMAIN }},
 https://{{ APP_DOMAIN }} {
     reverse_proxy localhost:{{ APP_PORT }}
+    encode zstd gzip
 }
