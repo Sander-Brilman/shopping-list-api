@@ -5,7 +5,7 @@ WORKDIR /source
 
 COPY --link ./ /source
 
-WORKDIR /source/ShoppingListApi
+WORKDIR /source/MixPlannerApi
 
 # Copy source code and publish app
 RUN dotnet restore
@@ -18,4 +18,4 @@ EXPOSE 8080
 WORKDIR /app
 COPY --link --from=build /app .
 USER $APP_UID
-ENTRYPOINT ["./ShoppingListApi"]
+ENTRYPOINT ["./MixPlannerApi"]
