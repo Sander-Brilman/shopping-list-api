@@ -1,5 +1,4 @@
-
-- name: "create {{ APP_USER }} user"
+- name: "Create {{ APP_USER }} user"
   tags: create_user
   hosts: all
   become: true
@@ -11,21 +10,13 @@
         name: "{{ APP_USER }}"
         state: present
 
-    - name: create {{ APP_USER }} user 
+    - name: "Create {{ APP_USER }} user"
       user:
         name: "{{ APP_USER }}"
         comment: user for running the shoppinglist application inside the container
         groups: "{{ APP_USER }}"
         shell: /usr/sbin/nologin
         password: '!'
-
-    - name: set permissions of app home
-      file: 
-        path: "/home/{{ APP_USER }}/"
-        state: directory
-        owner: "{{ APP_USER }}"
-        group: restic
-        mode: u=rx,g=rx,o=
 
 
     - name: "Get user id of {{ APP_USER }}"
@@ -42,29 +33,28 @@
       changed_when: false
 
     - set_fact:
-       USER_GROUP_ID: "{{ USER_GROUP_ID.stdout }}"
+        USER_GROUP_ID: "{{ USER_GROUP_ID.stdout }}"
 
-
-- name: setup docker compose 
+- name: Setup docker compose
   tags: run_container
   hosts: all
   become: true
   vars_files:
-  - ./variables.yml
+    - ./variables.yml
   tasks:
-    - name: template files
+    - name: Template files
       template:
         src: "{{ item.src }}"
-        dest: "/home/{{ APP_USER }}/{{ item.dest }}"
-        owner: "{{ APP_USER }}"
-        group: restic
-        mode: u=r,g=r,o=
+        dest: "/apps/{{ APP_USER }}/{{ item.dest }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: u=r,g=,o=
         force: true
       loop:
-          - { src: docker-compose.yml.j2, dest: docker-compose.yml }
-          - { src: postgres-password.txt.j2, dest: postgres-password.txt }
+        - { src: docker-compose.yml.j2, dest: docker-compose.yml }
+        - { src: postgres-password.txt.j2, dest: postgres-password.txt }
 
-    - name: setting permissions of data directory
+    - name: Setting permissions of data directory
       file:
         path: "{{ POSTGRES_DATA_LOCATION }}"
         state: directory
@@ -72,7 +62,7 @@
         group: "{{ APP_USER }}"
         mode: u=rwx,g=rwx,o=
 
-    - name: setting permissions of backup directory
+    - name: Setting permissions of backup directory
       file:
         path: "{{ POSTGRES_BACKUP_LOCATION }}"
         state: directory
@@ -80,44 +70,35 @@
         group: restic
         mode: u=rwx,g=rx,o=
 
-    - name: Start container
-      command: docker compose up -d --pull always
-      args:
-        chdir: "/home/{{ APP_USER }}/"
-
-
-- name: setup caddy reverse proxy
+- name: Setup caddy reverse proxy
   tags: caddy
   hosts: all
   become: true
   vars_files:
     - ./variables.yml
   tasks:
-    - name: template reverse proxy caddy file
+    - name: Template reverse proxy caddy file
       template:
         src: caddyfile.j2
         dest: "/etc/caddy/sites/{{ APP_USER }}.caddyfile"
         owner: caddy
-        group: restic
+        group: caddy
         mode: u=r,g=r,o=
 
-    - name: restart Caddy service
+    - name: Restart Caddy service
       command: sudo caddy reload --config /etc/caddy/Caddyfile
 
-
-
-- name: configure backup paths
+- name: Configure backup paths
   tags: configure_backup
   hosts: all
   become: true
   vars_files:
     - ./variables.yml
   tasks:
-    - name: template backup locations file
+    - name: Template backup locations file
       template:
         src: backup-locations.j2
         dest: "/etc/restic/backup-locations/{{ APP_USER }}"
         owner: restic
         group: restic
         mode: u=r,g=r,o=
-

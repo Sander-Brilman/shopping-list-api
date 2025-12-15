@@ -1,10 +1,7 @@
+APP_USER: shopping_list_api
 APP_DOMAIN_NAME: api.example.com
 APP_PORT: 8111
 
-APP_USER: shopping_list_api
-
 POSTGRES_PASSWORD: ""
-POSTGRES_DATA_LOCATION: "/home/{{ APP_USER }}/postgres-data/"
-POSTGRES_BACKUP_LOCATION: "/home/{{ APP_USER }}/postgres-backup/"
 
 DOCKER_TAG: docker.example.com/shopping-list-api:latest

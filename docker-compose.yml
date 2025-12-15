@@ -13,7 +13,7 @@ services:
       - POSTGRES_DB=ShoppingListDB
       - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
         test: ["CMD-SHELL", "pg_isready -U postgres"]
         interval: 30s

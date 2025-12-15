@@ -28,6 +28,7 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddEndpointsApiExplorer(); // Enables discovery of minimal API endpoints
 builder.Services.AddSwaggerGen();           // Adds Swagger generation
+builder.Services.AddCors();
 
 var app = builder.Build();
 
@@ -37,7 +38,14 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
-app.UseMiddleware<CorsMiddleware>();
+app.UseCors(policy =>
+{
+    policy
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .SetIsOriginAllowed(_ => true)
+        .AllowCredentials();
+});
 
 app.UseSwagger();
 app.UseSwaggerUI();

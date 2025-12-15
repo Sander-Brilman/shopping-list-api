@@ -4,7 +4,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="ShoppingListUiBlazor/ShoppingListUIBlazor.csproj" />
   <Project Path="Shared/Shared.csproj" />
   <Project Path="ShoppingListApi/ShoppingListApi.csproj" />
 </Solution>
